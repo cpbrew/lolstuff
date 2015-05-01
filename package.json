@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/cpbrew/lolstuff",
   "dependencies": {
+    "express": "^4.12.3",
     "lol-js": "^1.4.10"
   }
 }
