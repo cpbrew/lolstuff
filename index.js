@@ -1,10 +1,11 @@
 'use strict';
 
 let lol = require('lol-js');
+let config = require('config');
 
 const SUMMONER_NAME = 'brewminator';
 let client = lol.client({
-  apiKey: 'cb472c4d-5971-47e4-b496-84611dd7675f',
+  apiKey: config.get('apiKey'),
   defaultRegion: 'na',
   cache: null
 });
