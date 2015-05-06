@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%- title %></title>
+  <% if @title? : %>
+    <title><%- @title %></title>
+  <% else : %>
+    <title>My awsome app!</title>
+  <% end %>
   </head>
   <body>
     <% content %>

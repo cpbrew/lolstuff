@@ -1,71 +1,54 @@
 'use strict';
 
-let lol = require('lol-js'),
+let leagueapi = require('leagueapi'),
     config = require('config'),
     ect = require('ect'),
     path = require('path'),
     url = require('url'),
     app = require('express')();
 
-let renderer = ect({ watch: true,
-                      root: path.join(__dirname, 'views'),
-                      ext: '.ect'});
-app.engine('ect', renderer.render);
+let ectRenderer = ect({ watch: true,
+                        root: path.join(__dirname, 'views'),
+                        ext: '.ect'});
 app.set('view engine', 'ect');
+app.engine('ect', ectRenderer.render);
 
 const SUMMONER_NAME = config.get('summonerName');
-let client = lol.client({
-  apiKey: config.get('apiKey'),
-  defaultRegion: 'na',
-  cache: null
-});
-
-// client.getSummonersByNameAsync([SUMMONER_NAME])
-  // .then((data) => {
-    // let summoner = data[SUMMONER_NAME];
-    // if (!summoner) {
-      // console.log('FECK!');
-      // console.log(new Error ('Summoner ' + SUMMONER_NAME + ' not found!'));
-      // exit(1);
-    // }
-
-    // console.log('Summoner name: ' + summoner.name);
-    // console.log('Summoner id: ' + summoner.id);
-  // })
-  // .catch((err) => {
-    // console.log('FECK!');
-    // console.log(new Error ('Error getting summoner by name: ' + err));
-    // exit(1);
-  // });
-
-// client.destroy();
+leagueapi.init(config.get('apiKey'));
 
 app.get('/', (req, res) => {
-  let name = SUMMONER_NAME,
-      query = url.parse(req.url, true).query,
-      params = {
-        title: 'My awesome app!',
-        summonerName: 'Error!',
-        summonerId: 'Error!'
-      };
-  if (query.summonerName) name = query.summonerName;
-  
-  client.getSummonersByNameAsync([name])
-    .then((data) => {
-      let summoner = data[name];
-      if (summoner) {
-        params.summonerName = summoner.name;
-        params.summonerId = summoner.id;
-      }
-    });
-    
-    res.render('main', {
-      title: 'Blah',
-      summonerName: 'Foo',
-      summonerId: 'Bar'
-    });
+  let query = url.parse(req.url, true).query,
+      params = {};
+  if (query.summonerName) {
+    let name = query.summonerName.toLowerCase().replace(/\s/g, '');
+
+    leagueapi.Summoner.getByName(name)
+      .then((data) => {
+        let summoner = data[name];
+        if (summoner) {
+          params.title = summoner.name;
+          params.summonerName = summoner.name;
+          params.summonerId = summoner.id;
+        } else {
+          console.log('Returned data does not include info for %s', name);
+          console.log(data);
+        }
+
+        res.render('main', params);
+      })
+      .catch((err) => {
+        console.log('getSummonersByNameAsync failed');
+        console.log(err);
+        res.send(err);
+      });
+  } else {
+    res.render('main');
+  }
+
 });
 
 let server = app.listen(8080, () => {
-  console.log('Listening on port %s!', server.address().port);
+  let address = server.address().address;
+  let port = server.address().port;
+  console.log('Listening at http://%s:%s', address, port);
 });
